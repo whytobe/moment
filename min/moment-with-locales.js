@@ -115,6 +115,8 @@
         return m;
     }
 
+    // Plugins that add properties should also add the key here (null value),
+    // so we can properly clone ourselves.
     var momentProperties = utils_hooks__hooks.momentProperties = [];
 
     function copyConfig(to, from) {
@@ -202,6 +204,7 @@
         return value;
     }
 
+    // compare two arrays, return the number of differences
     function compareArrays(array1, array2, dontConvert) {
         var len = Math.min(array1.length, array2.length),
             lengthDiff = Math.abs(array1.length - array2.length),
@@ -219,6 +222,7 @@
     function Locale() {
     }
 
+    // internal storage for locale config files
     var locales = {};
     var globalLocale;
 
@@ -405,7 +409,7 @@
             Math.pow(10, Math.max(0, zerosToFill)).toString().substr(1) + absNumber;
     }
 
-    var formattingTokens = /(\[[^\[]*\])|(\\)?(Mo|MM?M?M?|Do|DDDo|DD?D?D?|ddd?d?|do?|w[o|w]?|W[o|W]?|Q|YYYYYY|YYYYY|YYYY|YY|gg(ggg?)?|GG(GGG?)?|e|E|a|A|hh?|HH?|mm?|ss?|S{1,9}|x|X|zz?|ZZ?|.)/g;
+    var formattingTokens = /(\[[^\[]*\])|(\\)?(Mo|MM?M?M?|Do|DDDo|DD?D?D?|ddd?d?|do?|w[o|w]?|W[o|W]?|Q|YYYYYY|YYYYY|YYYY|YY|BBBBBB|BBBBB|BBBB|BB|gg(ggg?)?|GG(GGG?)?|e|E|a|A|hh?|HH?|mm?|ss?|S{1,9}|x|X|zz?|ZZ?|.)/g;
 
     var localFormattingTokens = /(\[[^\[]*\])|(\\)?(LTS|LT|LL?L?L?|l{1,4})/g;
 
@@ -755,6 +759,8 @@
 
     utils_hooks__hooks.suppressDeprecationWarnings = false;
 
+    // iso 8601 regex
+    // 0000-00-00 0000-W00 or 0000-W00-0 + T + 00 or 00:00 or 00:00:00 or 00:00:00.000 + +00:00 or +0000 or +00)
     var from_string__isoRegex = /^\s*(?:[+-]\d{6}|\d{4})-(?:(\d\d-\d\d)|(W\d\d$)|(W\d\d-\d)|(\d\d\d))((T| )(\d\d(:\d\d(:\d\d(\.\d+)?)?)?)?([\+\-]\d\d(?::?\d\d)?|\s*Z)?)?$/;
 
     var isoDates = [
@@ -851,6 +857,8 @@
         return date;
     }
 
+    // FORMATTING
+
     addFormatToken(0, ['YY', 2], 0, function () {
         return this.year() % 100;
     });
@@ -879,6 +887,44 @@
         array[YEAR] = utils_hooks__hooks.parseTwoDigitYear(input);
     });
 
+    /**
+     * BE Addon
+     */
+    addFormatToken(0, ['BB', 2], 0, function () {
+        return (parseInt(this.year()) + 543) % 100;
+    });
+
+    addFormatToken(0, ['BBBB',   4],       0, function () {
+        return (parseInt(this.year()) + 543);
+    });
+    addFormatToken(0, ['BBBBB',  5],       0, function () {
+        return (parseInt(this.year()) + 543);
+    });
+    addFormatToken(0, ['BBBBBB', 6, true], 0, function () {
+        return (parseInt(this.year()) + 543);
+    });
+
+    // ALIASES
+
+    addUnitAlias('year', 'y');
+
+    // PARSING
+
+    addRegexToken('B',      matchSigned);
+    addRegexToken('BB',     match1to2, match2);
+    addRegexToken('BBBB',   match1to4, match4);
+    addRegexToken('BBBBB',  match1to6, match6);
+    addRegexToken('BBBBBB', match1to6, match6);
+
+    addParseToken(['BBBB', 'BBBBB'], YEAR);
+
+    addParseToken('BBBB', function (input, array) {
+        array[YEAR] = input.length === 2 ? utils_hooks__hooks.parseTwoDigitYear(parseInt(input) - 43) : toInt(parseInt(input) - 543);
+    });
+    addParseToken('BB', function (input, array) {
+        array[YEAR] = utils_hooks__hooks.parseTwoDigitYear(parseInt(input) - 43);
+    });
+
     // HELPERS
 
     function daysInYear(year) {
@@ -902,6 +948,8 @@
     function getIsLeapYear () {
         return isLeapYear(this.year());
     }
+
+    // FORMATTING
 
     addFormatToken('w', ['ww', 2], 'wo', 'week');
     addFormatToken('W', ['WW', 2], 'Wo', 'isoWeek');
@@ -982,6 +1030,8 @@
         var week = weekOfYear(this, 1, 4).week;
         return input == null ? week : this.add((input - week) * 7, 'd');
     }
+
+    // FORMATTING
 
     addFormatToken('DDD', ['DDDD', 3], 'DDDo', 'dayOfYear');
 
@@ -1150,6 +1200,7 @@
         config._dayOfYear = temp.dayOfYear;
     }
 
+    // constant that refers to the ISO standard
     utils_hooks__hooks.ISO_8601 = function () {};
 
     // date from string and format string
@@ -1242,6 +1293,7 @@
         }
     }
 
+    // date from string and array of format strings
     function configFromStringAndArray(config) {
         var tempConfig,
             bestMoment,
@@ -1473,6 +1525,8 @@
         return obj instanceof Duration;
     }
 
+    // FORMATTING
+
     function offset (token, separator) {
         addFormatToken(token, 0, 0, function () {
             var offset = this.utcOffset();
@@ -1670,6 +1724,7 @@
         return this._isUTC && this._offset === 0;
     }
 
+    // ASP.NET json date format regex
     var aspNetRegex = /(\-)?(?:(\d*)\.)?(\d+)\:(\d+)(?:\:(\d+)\.?(\d{3})?)?/;
 
     // from http://docs.closure-library.googlecode.com/git/closure_goog_date_date.js.source.html
@@ -1776,6 +1831,7 @@
         return res;
     }
 
+    // TODO: remove 'name' arg after deprecation is removed
     function createAdder(direction, name) {
         return function (val, period) {
             var dur, tmp;
@@ -1967,6 +2023,9 @@
         return this.to(local__createLocal(), withoutSuffix);
     }
 
+    // If passed a locale key, it will set the locale for this
+    // instance.  Otherwise, it will return the locale configuration
+    // variables for this instance.
     function locale (key) {
         var newLocaleData;
 
@@ -2089,6 +2148,8 @@
         return getParsingFlags(this).overflow;
     }
 
+    // FORMATTING
+
     addFormatToken(0, ['gg', 2], 0, function () {
         return this.weekYear() % 100;
     });
@@ -2157,6 +2218,8 @@
         return weeksInYear(this.year(), weekInfo.dow, weekInfo.doy);
     }
 
+    // FORMATTING
+
     addFormatToken('Q', 0, 0, 'quarter');
 
     // ALIASES
@@ -2175,6 +2238,8 @@
     function getSetQuarter (input) {
         return input == null ? Math.ceil((this.month() + 1) / 3) : this.month((input - 1) * 3 + this.month() % 3);
     }
+
+    // FORMATTING
 
     addFormatToken('D', ['DD', 2], 'Do', 'date');
 
@@ -2198,6 +2263,8 @@
     // MOMENTS
 
     var getSetDayOfMonth = makeGetSet('Date', true);
+
+    // FORMATTING
 
     addFormatToken('d', 0, 'do', 'day');
 
@@ -2324,6 +2391,8 @@
         return input == null ? this.day() || 7 : this.day(this.day() % 7 ? input : input - 7);
     }
 
+    // FORMATTING
+
     addFormatToken('H', ['HH', 2], 0, 'hour');
     addFormatToken('h', ['hh', 2], 0, function () {
         return this.hours() % 12 || 12;
@@ -2391,6 +2460,8 @@
     // this rule.
     var getSetHour = makeGetSet('Hours', true);
 
+    // FORMATTING
+
     addFormatToken('m', ['mm', 2], 0, 'minute');
 
     // ALIASES
@@ -2407,6 +2478,8 @@
 
     var getSetMinute = makeGetSet('Minutes', false);
 
+    // FORMATTING
+
     addFormatToken('s', ['ss', 2], 0, 'second');
 
     // ALIASES
@@ -2422,6 +2495,8 @@
     // MOMENTS
 
     var getSetSecond = makeGetSet('Seconds', false);
+
+    // FORMATTING
 
     addFormatToken('S', 0, 0, function () {
         return ~~(this.millisecond() / 100);
@@ -2477,6 +2552,8 @@
     // MOMENTS
 
     var getSetMillisecond = makeGetSet('Milliseconds', false);
+
+    // FORMATTING
 
     addFormatToken('z',  0, 0, 'zoneAbbr');
     addFormatToken('zz', 0, 0, 'zoneName');
@@ -3138,6 +3215,8 @@
     duration_prototype__proto.lang = lang;
 
     // Side effect imports
+
+    // FORMATTING
 
     addFormatToken('X', 0, 0, 'unix');
     addFormatToken('x', 0, 0, 'valueOf');
@@ -8429,6 +8508,7 @@
     //! locale : Sinhalese (si)
     //! author : Sampath Sitinamaluwa : https://github.com/sampathsris
 
+    /*jshint -W100*/
     var si = _moment__default.defineLocale('si', {
         months : 'ජනවාරි_පෙබරවාරි_මාර්තු_අප්‍රේල්_මැයි_ජූනි_ජූලි_අගෝස්තු_සැප්තැම්බර්_ඔක්තෝබර්_නොවැම්බර්_දෙසැම්බර්'.split('_'),
         monthsShort : 'ජන_පෙබ_මාර්_අප්_මැයි_ජූනි_ජූලි_අගෝ_සැප්_ඔක්_නොවැ_දෙසැ'.split('_'),
@@ -9356,6 +9436,8 @@
     //! author : Robin van der Vliet : https://github.com/robin0van0der0v with the help of Iustì Canun
 
 
+    // After the year there should be a slash and the amount of years since December 26, 1979 in Roman numerals.
+    // This is currently too difficult (maybe even impossible) to add.
     var tzl = _moment__default.defineLocale('tzl', {
         months : 'Januar_Fevraglh_Març_Avrïu_Mai_Gün_Julia_Guscht_Setemvar_Listopäts_Noemvar_Zecemvar'.split('_'),
         monthsShort : 'Jan_Fev_Mar_Avr_Mai_Gün_Jul_Gus_Set_Lis_Noe_Zec'.split('_'),

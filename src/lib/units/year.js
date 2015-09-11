@@ -72,7 +72,7 @@ addParseToken('BBBB', function (input, array) {
     array[YEAR] = input.length === 2 ? hooks.parseTwoDigitYear(parseInt(input) - 43) : toInt(parseInt(input) - 543);
 });
 addParseToken('BB', function (input, array) {
-    array[YEAR] = hooks.parseTwoDigitYear(parseInt(input) - 43)
+    array[YEAR] = hooks.parseTwoDigitYear(parseInt(input) - 43);
 });
 
 // HELPERS
