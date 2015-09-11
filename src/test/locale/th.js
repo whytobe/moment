@@ -22,9 +22,11 @@ test('parse', function (assert) {
 
 test('format', function (assert) {
     var a = [
+            ['dddd, Do MMMM BBBB, h:mm:ss a',      'อาทิตย์, 14 กุมภาพันธ์ 2553, 3:25:50 หลังเที่ยง'],
             ['dddd, Do MMMM YYYY, h:mm:ss a',      'อาทิตย์, 14 กุมภาพันธ์ 2010, 3:25:50 หลังเที่ยง'],
             ['ddd, h A',                           'อาทิตย์, 3 หลังเที่ยง'],
             ['M Mo MM MMMM MMM',                   '2 2 02 กุมภาพันธ์ กุมภา'],
+            ['BBBB BB',                            '2553 53'],
             ['YYYY YY',                            '2010 10'],
             ['D Do DD',                            '14 14 14'],
             ['d do dddd ddd dd',                   '0 0 อาทิตย์ อาทิตย์ อา.'],
@@ -244,6 +246,19 @@ test('lenient ordinal parsing', function (assert) {
                 'lenient ordinal parsing ' + i + ' date check');
     }
 });
+test('[BE] lenient ordinal parsing', function (assert) {
+    var i, ordinalStr, testMoment;
+    for (i = 1; i <= 31; ++i) {
+        ordinalStr = moment([2014, 0, i]).format('BBBB MM Do');
+        testMoment = moment(ordinalStr, 'BBBB MM Do');
+        assert.equal(testMoment.year(), 2014,
+                'lenient ordinal parsing ' + i + ' year check');
+        assert.equal(testMoment.month(), 0,
+                'lenient ordinal parsing ' + i + ' month check');
+        assert.equal(testMoment.date(), i,
+                'lenient ordinal parsing ' + i + ' date check');
+    }
+});
 
 test('lenient ordinal parsing of number', function (assert) {
     var i, testMoment;
@@ -258,11 +273,33 @@ test('lenient ordinal parsing of number', function (assert) {
     }
 });
 
+
+test('[BE] lenient ordinal parsing of number', function (assert) {
+    var i, testMoment;
+    for (i = 1; i <= 31; ++i) {
+        testMoment = moment('2557 01 ' + i, 'BBBB MM Do');
+        assert.equal(testMoment.year(), 2014,
+                'lenient ordinal parsing of number ' + i + ' year check');
+        assert.equal(testMoment.month(), 0,
+                'lenient ordinal parsing of number ' + i + ' month check');
+        assert.equal(testMoment.date(), i,
+                'lenient ordinal parsing of number ' + i + ' date check');
+    }
+});
+
 test('strict ordinal parsing', function (assert) {
     var i, ordinalStr, testMoment;
     for (i = 1; i <= 31; ++i) {
         ordinalStr = moment([2014, 0, i]).format('YYYY MM Do');
         testMoment = moment(ordinalStr, 'YYYY MM Do', true);
+        assert.ok(testMoment.isValid(), 'strict ordinal parsing ' + i);
+    }
+});
+test('[BE] strict ordinal parsing', function (assert) {
+    var i, ordinalStr, testMoment;
+    for (i = 1; i <= 31; ++i) {
+        ordinalStr = moment([2014, 0, i]).format('BBBB MM Do');
+        testMoment = moment(ordinalStr, 'BBBB MM Do', true);
         assert.ok(testMoment.isValid(), 'strict ordinal parsing ' + i);
     }
 });
