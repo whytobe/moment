@@ -50,6 +50,44 @@ addParseToken('Y', function (input, array) {
     array[YEAR] = parseInt(input, 10);
 });
 
+/**
+ * BE Addon
+ */
+addFormatToken(0, ['BB', 2], 0, function () {
+    return (parseInt(this.year()) + 543) % 100;
+});
+
+addFormatToken(0, ['BBBB',   4],       0, function () {
+    return (parseInt(this.year()) + 543);
+});
+addFormatToken(0, ['BBBBB',  5],       0, function () {
+    return (parseInt(this.year()) + 543);
+});
+addFormatToken(0, ['BBBBBB', 6, true], 0, function () {
+    return (parseInt(this.year()) + 543);
+});
+
+// ALIASES
+
+addUnitAlias('year', 'y');
+
+// PARSING
+
+addRegexToken('B',      matchSigned);
+addRegexToken('BB',     match1to2, match2);
+addRegexToken('BBBB',   match1to4, match4);
+addRegexToken('BBBBB',  match1to6, match6);
+addRegexToken('BBBBBB', match1to6, match6);
+
+addParseToken(['BBBB', 'BBBBB'], YEAR);
+
+addParseToken('BBBB', function (input, array) {
+    array[YEAR] = input.length === 2 ? hooks.parseTwoDigitYear(parseInt(input) - 43) : toInt(parseInt(input) - 543);
+});
+addParseToken('BB', function (input, array) {
+    array[YEAR] = hooks.parseTwoDigitYear(parseInt(input) - 43);
+});
+
 // HELPERS
 
 export function daysInYear(year) {
